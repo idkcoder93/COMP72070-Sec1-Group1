@@ -41,10 +41,10 @@
             // 
             panel1.Controls.Add(panel2);
             panel1.Dock = DockStyle.Right;
-            panel1.Location = new Point(842, 10);
+            panel1.Location = new Point(1802, 10);
             panel1.Margin = new Padding(6, 8, 6, 8);
             panel1.Name = "panel1";
-            panel1.Size = new Size(98, 265);
+            panel1.Size = new Size(98, 163);
             panel1.TabIndex = 0;
             // 
             // panel2
@@ -82,9 +82,10 @@
             label1.Margin = new Padding(6);
             label1.Name = "label1";
             label1.Padding = new Padding(10, 8, 6, 8);
-            label1.Size = new Size(832, 163);
+            label1.Size = new Size(1792, 163);
             label1.TabIndex = 1;
-            label1.Text = " This is a sample text message. This is a sample text message. This is a sample text message. \r\n\r\nThis is a sample text message. \r\n";
+            label1.Text = "";
+            label1.Click += label1_Click;
             // 
             // MeChatBubble
             // 
@@ -98,7 +99,7 @@
             MinimumSize = new Size(0, 101);
             Name = "MeChatBubble";
             Padding = new Padding(10, 10, 10, 13);
-            Size = new Size(950, 288);
+            Size = new Size(1910, 186);
             panel1.ResumeLayout(false);
             panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
@@ -107,9 +108,9 @@
 
         #endregion
 
-        private System.Windows.Forms.Panel panel1;
+    private System.Windows.Forms.Panel panel1;
     private System.Windows.Forms.PictureBox pictureBox1;
-    private System.Windows.Forms.Label label1;
+    protected System.Windows.Forms.Label label1;
     private System.Windows.Forms.Panel panel2;
     }
 }

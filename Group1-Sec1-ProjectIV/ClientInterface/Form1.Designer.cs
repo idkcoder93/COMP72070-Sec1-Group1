@@ -33,8 +33,7 @@
             flowLayoutPanel1 = new FlowLayoutPanel();
             textBox1 = new TextBox();
             button1 = new Button();
-            chatBubbleControl1 = new YouChatBubble();
-            meChatBubble1 = new MeChatBubble();
+            chatContainerPanel = new Panel();
             sideBar.SuspendLayout();
             flowLayoutPanel1.SuspendLayout();
             SuspendLayout();
@@ -106,37 +105,21 @@
             button1.TabIndex = 2;
             button1.UseVisualStyleBackColor = false;
             // 
-            // chatBubbleControl1
+            // chatContainerPanel
             // 
-            chatBubbleControl1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            chatBubbleControl1.BackColor = Color.Transparent;
-            chatBubbleControl1.Location = new Point(217, 0);
-            chatBubbleControl1.Margin = new Padding(6, 8, 6, 8);
-            chatBubbleControl1.Name = "chatBubbleControl1";
-            chatBubbleControl1.Padding = new Padding(0, 10, 10, 13);
-            chatBubbleControl1.Size = new Size(1917, 187);
-            chatBubbleControl1.TabIndex = 2;
-            // 
-            // meChatBubble1
-            // 
-            meChatBubble1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            meChatBubble1.AutoSize = true;
-            meChatBubble1.BackColor = Color.Transparent;
-            meChatBubble1.Location = new Point(217, 194);
-            meChatBubble1.Margin = new Padding(6, 8, 6, 8);
-            meChatBubble1.MinimumSize = new Size(0, 101);
-            meChatBubble1.Name = "meChatBubble1";
-            meChatBubble1.Padding = new Padding(10, 10, 10, 13);
-            meChatBubble1.Size = new Size(1917, 187);
-            meChatBubble1.TabIndex = 3;
+            chatContainerPanel.AutoScroll = true;
+            chatContainerPanel.Dock = DockStyle.Fill;
+            chatContainerPanel.Location = new Point(217, 0);
+            chatContainerPanel.Name = "chatContainerPanel";
+            chatContainerPanel.Size = new Size(1917, 907);
+            chatContainerPanel.TabIndex = 2;
             // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(13F, 32F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(2134, 1038);
-            Controls.Add(meChatBubble1);
-            Controls.Add(chatBubbleControl1);
+            Controls.Add(chatContainerPanel);
             Controls.Add(flowLayoutPanel1);
             Controls.Add(sideBar);
             Name = "Form1";
@@ -145,7 +128,6 @@
             flowLayoutPanel1.ResumeLayout(false);
             flowLayoutPanel1.PerformLayout();
             ResumeLayout(false);
-            PerformLayout();
         }
 
         #endregion
@@ -155,7 +137,6 @@
         private FlowLayoutPanel flowLayoutPanel1;
         private TextBox textBox1;
         private Button button1;
-        private YouChatBubble chatBubbleControl1;
-        private MeChatBubble meChatBubble1;
+        private Panel chatContainerPanel;
     }
 }

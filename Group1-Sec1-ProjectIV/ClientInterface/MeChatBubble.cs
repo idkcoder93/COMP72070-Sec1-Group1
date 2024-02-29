@@ -16,5 +16,15 @@ namespace ClientInterface
         {
             InitializeComponent();
         }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        public static void SetBubbleText(MeChatBubble bubble, string text)
+        {
+            bubble.label1.Text = text;
+        }
     }
 }
