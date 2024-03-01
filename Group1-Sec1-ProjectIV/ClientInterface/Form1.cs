@@ -16,10 +16,9 @@ namespace ClientInterface
 {
     public partial class Form1 : Form
 {
-    //bool chatConnected = false;
+
     int chatPort = 27000;
     int recPort = 27500;
-    //bool receiveData = false;
     string chatSendStr = "127.0.0.1";
 
     UdpClient udpClnt = new UdpClient();
@@ -31,7 +30,7 @@ namespace ClientInterface
         InitializeComponent();
         textBox1.KeyPress += textBox1_KeyPress;
 
-            StartReceivingMessages();
+        StartReceivingMessages();
     }
 
     private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -45,12 +44,14 @@ namespace ClientInterface
 
     private void StartReceivingMessages()
     {
+        // UI thread for dynamic elements
         Task t = new Task(() => { ReceiveMessages(); });
         t.Start();
     }
 
-        private void textBox1_KeyPress(object sender, KeyPressEventArgs e)
+    private void textBox1_KeyPress(object sender, KeyPressEventArgs e)
     {
+        // Enter-key pressed will send message
         if (e.KeyChar == (char)Keys.Enter)
         {
             e.Handled = true;
@@ -62,6 +63,7 @@ namespace ClientInterface
     {
         string newText = textBox1.Text;
 
+        // Checking to see is string is empty
         if (String.IsNullOrEmpty(newText))
         {
             MessageBox.Show("Cannot send empty messages.", "Cannot Send");
@@ -93,62 +95,62 @@ namespace ClientInterface
         chatContainerPanel.Controls.Add(meChatBubble1);
     }
 
-        private void ReceiveMessages()
-        {
-            byte[] buffer = new byte[512];
-            
-            UdpClient udpClnt = new UdpClient();
-
-            IPEndPoint ipEndPoint = new IPEndPoint(IPAddress.Any, recPort); // Bind to specific IP address
-
-            udpClnt.ExclusiveAddressUse = false;
-            udpClnt.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            udpClnt.Client.Bind(ipEndPoint);
-
-            //var from = new IPEndPoint(0, 0);
-
-            while (true)
-            {
-                try
-                {
-                    int bytesReady = udpClnt.Available;
-
-                    while (bytesReady > 0)
-                    {
-                        try
-                        {
-                            var buff = new byte[bytesReady];
-                            buff = udpClnt.Receive(ref ipEndPoint);
-                            string strData = Encoding.ASCII.GetString(buff, 0, buff.Length);
-                            DisplayReceivedMessage(strData);
-                        }
-                        catch (Exception ex) { MessageBox.Show(ex.ToString()); }
-                        bytesReady = 0;
-                    }
-
-                    Thread.Sleep(1000); // Sleep for 1 second
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Error during receiving: " + ex.Message);
-                }
-            }
-        }
-
-        private void DisplayReceivedMessage(string message)
+    private void ReceiveMessages()
     {
-            if (chatContainerPanel.InvokeRequired)
-            {
-                chatContainerPanel.Invoke(new MethodInvoker(() => DisplayReceivedMessage(message)));
-                return;
-            }
+        byte[] buffer = new byte[512];
+            
+        UdpClient udpClnt = new UdpClient();
 
-            YouChatBubble youChatBubble = new YouChatBubble();
-            YouChatBubble.SetBubbleText(youChatBubble, message);
-            int newY = (chatContainerPanel.Controls.Count > 0) ? chatContainerPanel.Controls[chatContainerPanel.Controls.Count - 1].Bottom + 10 : 0;
-            youChatBubble.Location = new Point(0, newY);
-            chatContainerPanel.Controls.Add(youChatBubble);
+        IPEndPoint ipEndPoint = new IPEndPoint(IPAddress.Any, recPort); // Bind to any IP address with that port
+
+        udpClnt.ExclusiveAddressUse = false;
+        udpClnt.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+        udpClnt.Client.Bind(ipEndPoint);
+
+
+        while (true)
+        {
+            try
+            {
+                int bytesReady = udpClnt.Available;
+
+                while (bytesReady > 0)
+                {
+                    try
+                    {
+                        var buff = new byte[bytesReady];
+                        buff = udpClnt.Receive(ref ipEndPoint); // Referencing end-point of data communication
+                        string strData = Encoding.ASCII.GetString(buff, 0, buff.Length);
+                        DisplayReceivedMessage(strData);
+                    }
+                    catch (Exception ex) { MessageBox.Show(ex.ToString()); }
+                    bytesReady = 0;
+                }
+
+                Thread.Sleep(1000); // Sleep for 1 second
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error during receiving: " + ex.Message);
+            }
         }
+    }
+
+    private void DisplayReceivedMessage(string message)
+    {
+        // Invokes change to chat panel
+        if (chatContainerPanel.InvokeRequired)
+        {
+            chatContainerPanel.Invoke(new MethodInvoker(() => DisplayReceivedMessage(message)));
+            return;
+        }
+
+        YouChatBubble youChatBubble = new YouChatBubble();
+        YouChatBubble.SetBubbleText(youChatBubble, message);
+        int newY = (chatContainerPanel.Controls.Count > 0) ? chatContainerPanel.Controls[chatContainerPanel.Controls.Count - 1].Bottom + 10 : 0;
+        youChatBubble.Location = new Point(0, newY);
+        chatContainerPanel.Controls.Add(youChatBubble);
+    }
 
 
 }
