@@ -44,7 +44,7 @@
             panel1.Location = new Point(0, 10);
             panel1.Margin = new Padding(6, 8, 6, 8);
             panel1.Name = "panel1";
-            panel1.Size = new Size(98, 265);
+            panel1.Size = new Size(98, 163);
             panel1.TabIndex = 2;
             // 
             // panel2
@@ -82,11 +82,10 @@
             chatLabel.Margin = new Padding(6);
             chatLabel.Name = "chatLabel";
             chatLabel.Padding = new Padding(6, 8, 6, 8);
-            chatLabel.Size = new Size(842, 154);
+            chatLabel.Size = new Size(1802, 154);
             chatLabel.TabIndex = 3;
-            chatLabel.Text = " This is a sample text message. This is a sample text message. This is a sample text message. \r\n\r\nThis is a sample text message. ";
             // 
-            // ChatBubbleControl
+            // YouChatBubble
             // 
             AutoScaleDimensions = new SizeF(13F, 32F);
             AutoScaleMode = AutoScaleMode.Font;
@@ -94,9 +93,9 @@
             Controls.Add(chatLabel);
             Controls.Add(panel1);
             Margin = new Padding(6, 8, 6, 8);
-            Name = "ChatBubbleControl";
+            Name = "YouChatBubble";
             Padding = new Padding(0, 10, 10, 13);
-            Size = new Size(950, 288);
+            Size = new Size(1910, 186);
             panel1.ResumeLayout(false);
             panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
@@ -108,6 +107,6 @@
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.PictureBox pictureBox1;
-        private System.Windows.Forms.Label chatLabel;
+        protected System.Windows.Forms.Label chatLabel;
     }
 }

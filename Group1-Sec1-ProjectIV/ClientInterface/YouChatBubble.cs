@@ -16,5 +16,10 @@ namespace ClientInterface
         {
             InitializeComponent();
         }
+
+        public static void SetBubbleText(YouChatBubble bubble, string text)
+        {
+            bubble.chatLabel.Text = text;
+        }
     }
 }

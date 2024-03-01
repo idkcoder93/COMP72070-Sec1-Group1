@@ -64,7 +64,7 @@
             clientButton.TabIndex = 1;
             clientButton.Text = "  client#1";
             clientButton.UseVisualStyleBackColor = false;
-            clientButton.Click += clientButton_Click;
+            //clientButton.Click += clientButton_Click;
             // 
             // flowLayoutPanel1
             // 
@@ -89,7 +89,7 @@
             textBox1.PlaceholderText = "Type here...";
             textBox1.Size = new Size(1741, 94);
             textBox1.TabIndex = 2;
-            textBox1.TextChanged += textBox1_TextChanged;
+            //textBox1.TextChanged += textBox1_TextChanged;
             // 
             // button1
             // 
