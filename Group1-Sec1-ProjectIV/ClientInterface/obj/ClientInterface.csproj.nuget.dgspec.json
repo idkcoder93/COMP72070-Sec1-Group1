@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "\\\\Mac\\Home\\Desktop\\GroupProjectIV\\ClientInterface\\ClientInterface\\ClientInterface.csproj": {}
+    "\\\\Mac\\Home\\Desktop\\ProjectIV_Group1\\Group1-Sec1-ProjectIV\\ClientInterface\\ClientInterface.csproj": {}
   },
   "projects": {
-    "\\\\Mac\\Home\\Desktop\\GroupProjectIV\\ClientInterface\\ClientInterface\\ClientInterface.csproj": {
+    "\\\\Mac\\Home\\Desktop\\ProjectIV_Group1\\Group1-Sec1-ProjectIV\\ClientInterface\\ClientInterface.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "\\\\Mac\\Home\\Desktop\\GroupProjectIV\\ClientInterface\\ClientInterface\\ClientInterface.csproj",
+        "projectUniqueName": "\\\\Mac\\Home\\Desktop\\ProjectIV_Group1\\Group1-Sec1-ProjectIV\\ClientInterface\\ClientInterface.csproj",
         "projectName": "ClientInterface",
-        "projectPath": "\\\\Mac\\Home\\Desktop\\GroupProjectIV\\ClientInterface\\ClientInterface\\ClientInterface.csproj",
+        "projectPath": "\\\\Mac\\Home\\Desktop\\ProjectIV_Group1\\Group1-Sec1-ProjectIV\\ClientInterface\\ClientInterface.csproj",
         "packagesPath": "C:\\Users\\alexfridman\\.nuget\\packages\\",
-        "outputPath": "\\\\Mac\\Home\\Desktop\\GroupProjectIV\\ClientInterface\\ClientInterface\\obj\\",
+        "outputPath": "\\\\Mac\\Home\\Desktop\\ProjectIV_Group1\\Group1-Sec1-ProjectIV\\ClientInterface\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\alexfridman\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -34,6 +34,11 @@
           "warnAsError": [
             "NU1605"
           ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
         }
       },
       "frameworks": {
@@ -58,7 +63,7 @@
               "privateAssets": "none"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.101/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.200/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
