@@ -1,27 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Sockets;
+﻿using ServerGUI.MVVM.View;
+using System;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace ServerGUI
 {
     public partial class MainWindow : Window
     {
-        private TcpListener server;
+        private UdpClient server;
         private Thread listenThread;
+        private const int port = 27000;
+        private int messagesReceived = 0; 
 
         public MainWindow()
         {
@@ -33,12 +25,9 @@ namespace ServerGUI
         {
             try
             {
-                server = new TcpListener(IPAddress.Any, 27000);
-                server.Start();
-
+                server = new UdpClient(port);
                 listenThread = new Thread(ListenForClients);
                 listenThread.Start();
-
 
                 // Update UI element indicating that the server has started
                 Dispatcher.Invoke(() =>
@@ -58,46 +47,44 @@ namespace ServerGUI
             {
                 while (true)
                 {
-                    TcpClient client = server.AcceptTcpClient();
+                    IPEndPoint clientEndPoint = new IPEndPoint(IPAddress.Any, 0);
+                    byte[] clientData = server.Receive(ref clientEndPoint);
 
-                    Thread clientThread = new Thread(HandleClient);
-                    clientThread.Start(client);
+                    Thread clientThread = new Thread(() => HandleClient(clientData, clientEndPoint));
+                    clientThread.Start();
                 }
             }
             catch (SocketException ex)
             {
-                MessageBox.Show($"Error accepting client connection: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error receiving data: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        private void HandleClient(object clientObj)
+        private void HandleClient(byte[] data, IPEndPoint clientEndPoint)
         {
-            TcpClient client = (TcpClient)clientObj;
-
-            Dispatcher.Invoke(() =>
-            {
-                serverStatusLabel.Content = "Client Connected";
-            });
-
             try
             {
-                NetworkStream stream = client.GetStream();
-                byte[] buffer = new byte[1024];
-                int bytesRead;
+                string dataReceived = Encoding.ASCII.GetString(data);
 
-                while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) != 0)
+                Dispatcher.Invoke(() =>
                 {
-                    string dataReceived = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+                    serverStatusLabel.Content = "Client Connected";
+                    numUsersLabel.Content = "1";
 
-                    // Handle the received data here, you can update UI elements or perform any other operations.
-                    // For example: receivedMessagesListBox.Items.Add(dataReceived);
+                    messagesReceived++;
+                    numReceivedMessages.Content = messagesReceived;
 
-                    // Echo the message back to the client (optional)
-                    byte[] response = Encoding.ASCII.GetBytes($"Server received: {dataReceived}");
-                    stream.Write(response, 0, response.Length);
-                }
+                    latestMessage.Content = dataReceived; 
+                });
 
-                client.Close();
+
+
+                // Handle the received data here, you can update UI elements or perform any other operations.
+                // For example: receivedMessagesListBox.Items.Add(dataReceived);
+
+                // Echo the message back to the client (optional)
+                byte[] response = Encoding.ASCII.GetBytes($"Server received: {dataReceived}");
+                server.Send(response, response.Length, clientEndPoint);
             }
             catch (Exception ex)
             {
@@ -107,8 +94,7 @@ namespace ServerGUI
 
         private void StopServer()
         {
-            server.Stop();
-            listenThread.Abort();
+            server.Close();
             // You can update UI elements to indicate that the server has stopped.
         }
 

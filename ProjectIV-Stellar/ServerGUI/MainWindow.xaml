@@ -20,6 +20,8 @@
     <Border Background="#272537"
             CornerRadius="20">
         <Grid>
+
+
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="200"/>
                 <ColumnDefinition/>
@@ -80,6 +82,18 @@
             <Label x:Name="serverStatusLabel" Content="Server not started" 
                    HorizontalAlignment="Left" VerticalAlignment="Top"
                    Foreground="White" Grid.Column="1" Margin="589,20,0,0"/>
+
+            <Label x:Name="numUsersLabel" Content="0" FontSize="20"
+                     HorizontalAlignment="Left" VerticalAlignment="Top"
+                     Foreground="White" Grid.Column="1" Margin="42,198,0,0" Grid.Row="1"/>
+
+            <Label x:Name="numReceivedMessages" Content="0" FontSize="20"
+                     HorizontalAlignment="Left" VerticalAlignment="Top"
+                     Foreground="White" Grid.Column="1" Margin="485,198,0,0" Grid.Row="1"/>
+
+            <Label x:Name="latestMessage" Content="-" FontSize="20"
+                     HorizontalAlignment="Left" VerticalAlignment="Top"
+                    Foreground="White" Grid.Column="1" Margin="45,360,0,0" Grid.Row="1"/>
 
 
 
