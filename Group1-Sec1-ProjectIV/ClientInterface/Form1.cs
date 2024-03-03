@@ -22,7 +22,6 @@ namespace ClientInterface
         int chatPort = 27000;
         int recPort = 27500;
         string chatSendStr = "127.0.0.1";
-        int numOfReceivedPicture = 0;
 
         UdpClient udpClnt = new UdpClient();
         Socket soc = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
@@ -191,7 +190,7 @@ namespace ClientInterface
         {
             int bytesInPackets = 1024;
             int size = image.Length;
-            TcpListener listener = new TcpListener(IPAddress.Parse("127.0.0.1"), chatPort);
+            TcpListener listener = new TcpListener(IPAddress.Parse("127.0.0.1"), 30000);
 
             try
             {
@@ -222,7 +221,7 @@ namespace ClientInterface
 
         private void TCPImageReceive()
         {
-            TcpListener listener = new TcpListener(IPAddress.Parse("127.0.0.1"), recPort);
+            TcpListener listener = new TcpListener(IPAddress.Parse("127.0.0.1"), 35000);
 
             try
             {
