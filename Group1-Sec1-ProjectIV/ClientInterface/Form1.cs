@@ -34,6 +34,7 @@ namespace ClientInterface
             textBox1.KeyPress += textBox1_KeyPress;
 
             StartReceivingMessages();
+            TCPImageReceive();
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -230,15 +231,18 @@ namespace ClientInterface
                 NetworkStream stream = client.GetStream();
 
                 byte[] buffer = new byte[1024]; // Incoming packets
-                string receivedFileName = $"received_image{numOfReceivedPicture}.jpg"; // File name to save received image
-                numOfReceivedPicture++;
-                using (FileStream fs = new FileStream(receivedFileName, FileMode.Create))
+                int totalBytesReceived = 0;
+                using (MemoryStream imageStream = new MemoryStream())
                 {
                     int bytesRead;
                     while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
                     {
-                        fs.Write(buffer, 0, bytesRead);
+                        imageStream.Write(buffer, 0, bytesRead);
+                        totalBytesReceived += bytesRead;
                     }
+
+                    // After receiving all image data, call the ImageDeserializer function
+                    ImageDeserializer(imageStream.ToArray());
                 }
 
                 stream.Close();
@@ -253,5 +257,25 @@ namespace ClientInterface
                 listener.Stop();
             }
         }
+
+
+        private void ImageDeserializer(byte[] data)
+        {
+            using (MemoryStream memstr = new MemoryStream(data))
+            {
+                System.Drawing.Image img = System.Drawing.Image.FromStream(memstr);
+                SaveImageToFile(img);
+            }
+        }
+
+        private void SaveImageToFile(System.Drawing.Image img)
+        {
+            // Specify the file path where you want to save the image
+            string filePath = @"\\Mac\\Home\\Desktop\\ProjectIV_Group1\\Group1-Sec1-ProjectIV\\ClientInterface\\Resources\\image.jpeg";
+
+            // Save the image to the specified file path
+            img.Save(filePath, System.Drawing.Imaging.ImageFormat.Jpeg);
+        }
+
     }
 }
