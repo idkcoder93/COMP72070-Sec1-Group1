@@ -105,7 +105,7 @@ namespace ClientInterface
             button1.Size = new Size(117, 101);
             button1.TabIndex = 2;
             button1.UseVisualStyleBackColor = false;
-            button1.Click += OnClickAttachButton;
+            //button1.Click += OnClickAttachButton;
             // 
             // chatContainerPanel
             // 

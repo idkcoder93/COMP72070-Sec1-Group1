@@ -12,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using static System.Net.Mime.MediaTypeNames;
 using System.Security.Policy;
+using System.Net.Http;
 
 
 namespace ClientInterface
@@ -19,9 +20,12 @@ namespace ClientInterface
     public partial class Form1 : Form
     {
 
-        int chatPort = 27000;
-        int recPort = 27500;
+        int chatPort = 27500;
+        int recPort = 27000;
         string chatSendStr = "127.0.0.1";
+        int TcpPort = 30000;
+
+        int imageNumber = 1;
 
         UdpClient udpClnt = new UdpClient();
         Socket soc = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
@@ -33,7 +37,7 @@ namespace ClientInterface
             textBox1.KeyPress += textBox1_KeyPress;
 
             StartReceivingMessages();
-            TCPImageReceive();
+            StartReceivingImages();
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -76,7 +80,7 @@ namespace ClientInterface
             try
             {
                 UdpClient udpClient = new UdpClient();
-                IPEndPoint ipEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), chatPort);
+                IPEndPoint ipEndPoint = new IPEndPoint(IPAddress.Parse(chatSendStr), chatPort);
                 byte[] data = Encoding.ASCII.GetBytes(newText);
                 udpClient.Send(data, data.Length, ipEndPoint);
                 DisplaySentMessage(newText);
@@ -155,125 +159,202 @@ namespace ClientInterface
             chatContainerPanel.Controls.Add(youChatBubble);
         }
 
-        // Attachment functionality
-        private void OnClickAttachButton(object sender, EventArgs e)
+        // Attachment functionality -- TODO: implement click functionality to the attach button
+
+
+        private async Task ReceiveImagesFromServer()
         {
-            OpenFileDialog openFileDialog1 = new OpenFileDialog();
-            openFileDialog1.Filter = "JPEG files (*.jpg;*.jpeg)|*.jpg;*.jpeg|All files (*.*)|*.*"; // Limit to JPEG files
-            DialogResult result = openFileDialog1.ShowDialog(); // Show the dialog.
-            if (result == DialogResult.OK) // Test result.
-            {
-                string file = openFileDialog1.FileName;
-                try
-                {
-                    // Check if the selected file is a JPEG image
-                    if (Path.GetExtension(file).Equals(".jpg", StringComparison.OrdinalIgnoreCase) ||
-                        Path.GetExtension(file).Equals(".jpeg", StringComparison.OrdinalIgnoreCase))
-                    {
-                        byte[] imageData = File.ReadAllBytes(file);
-                        TCPImageSend(imageData);
-                    }
-                    else
-                    {
-                        MessageBox.Show("Please select a JPEG image file.");
-                    }
-                }
-                catch (IOException ex)
-                {
-                    MessageBox.Show("Error: " + ex.Message);
-                }
-            }
-        }
-
-
-        private void TCPImageSend(byte[] image)
-        {
-            int bytesInPackets = 1024;
-            int size = image.Length;
-            TcpListener listener = new TcpListener(IPAddress.Parse("127.0.0.1"), 30000);
-
             try
             {
-                listener.Start();
-                TcpClient client = listener.AcceptTcpClient();
-                NetworkStream stream = client.GetStream();
+                IPAddress ipAddress = IPAddress.Parse(chatSendStr);
+                var ipEndPoint = new IPEndPoint(ipAddress, TcpPort);
+                using TcpClient client = new();
+                await client.ConnectAsync(ipEndPoint);
 
-                while (size > 0)
-                {
-                    int bytesToSend = Math.Min(bytesInPackets, size); // Compares which one is smaller
-                    stream.Write(image, image.Length - size, bytesToSend); // Send a portion of the image
-                    size -= bytesToSend;
-                }
-
-                stream.Close();
-                client.Close();
-
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error: " + ex.ToString());
-            }
-            finally
-            {
-                listener.Stop();
-            }
-        }
-
-        private void TCPImageReceive()
-        {
-            TcpListener listener = new TcpListener(IPAddress.Parse("127.0.0.1"), 35000);
-
-            try
-            {
-                listener.Start();
-                TcpClient client = listener.AcceptTcpClient();
-                NetworkStream stream = client.GetStream();
-
-                byte[] buffer = new byte[1024]; // Incoming packets
-                int totalBytesReceived = 0;
-                using (MemoryStream imageStream = new MemoryStream())
-                {
-                    int bytesRead;
-                    while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
+                    while (true) // Continuously listen for incoming images
                     {
-                        imageStream.Write(buffer, 0, bytesRead);
-                        totalBytesReceived += bytesRead;
+                        NetworkStream nNetStream = client.GetStream();
+                        System.Drawing.Image returnImage = System.Drawing.Image.FromStream(nNetStream);
+                        SaveImageToFile(returnImage);
+                        ImageLabelLink();
+
+                        // Add some delay to prevent busy waiting (optional)
+                        await Task.Delay(1000); 
                     }
-
-                    // After receiving all image data, call the ImageDeserializer function
-                    ImageDeserializer(imageStream.ToArray());
-                }
-
-                stream.Close();
-                client.Close();
             }
-            catch (Exception ex)
+            catch (IOException ex)
             {
-                MessageBox.Show("Error: " + ex.ToString());
-            }
-            finally
-            {
-                listener.Stop();
+                MessageBox.Show("Error: " + ex.Message);
             }
         }
 
 
-        private void ImageDeserializer(byte[] data)
+        // Call the asynchronous method to start receiving images from the server
+        private void StartReceivingImages()
         {
-            using (MemoryStream memstr = new MemoryStream(data))
-            {
-                System.Drawing.Image img = System.Drawing.Image.FromStream(memstr);
-                SaveImageToFile(img);
-            }
+            Task.Run(() => ReceiveImagesFromServer());
         }
+
+        // Label linking to the image
+        public void ImageLabelLink()
+        {
+            // Create a new LinkLabel
+            LinkLabel ImageLink = new LinkLabel();
+
+            // Set the text of the LinkLabel
+            ImageLink.Text = $"image{imageNumber}.jpeg";
+            imageNumber++;
+
+            // Calculate the new Y position for the LinkLabel
+            int newY = (chatContainerPanel.Controls.Count > 0) ? chatContainerPanel.Controls[chatContainerPanel.Controls.Count - 1].Bottom + 10 : 0;
+
+            // Add the LinkLabel to the chatContainerPanel
+            chatContainerPanel.Controls.Add(ImageLink);
+
+            // Subscribe to the LinkClicked event
+            ImageLink.LinkClicked += ImageLink_LinkClicked;
+        }
+
+        private void ImageLink_LinkClicked(object? sender, LinkLabelLinkClickedEventArgs e)
+        {
+            e.Link.Visited = true;
+            System.Diagnostics.Process.Start("http://www.microsoft.com");
+        }
+
+        //private TcpListener StartTCPListener()
+        //{
+        //    TcpListener listener = new TcpListener(IPAddress.Any, 30000);
+        //    listener.Start();
+        //    return listener;
+        //}
+
+        //private void HandleClient(TcpClient client)
+        //{
+        //    try
+        //    {
+        //        using (NetworkStream stream = client.GetStream())
+        //        {
+        //            byte[] buffer = new byte[1024];
+        //            int bytesRead;
+        //            MemoryStream imageStream = new MemoryStream();
+
+        //            while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
+        //            {
+        //                imageStream.Write(buffer, 0, bytesRead);
+        //            }
+
+        //            // Process the received image data
+        //            ImageDeserializer(imageStream.ToArray());
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MessageBox.Show("Error handling client: " + ex.Message);
+        //    }
+        //}
+
+        //private void StartListening()
+        //{
+        //    TcpListener listener = StartTCPListener();
+
+        //    try
+        //    {
+        //        while (true)
+        //        {
+        //            TcpClient client = listener.AcceptTcpClient();
+
+        //            // Handle the client connection asynchronously
+        //            Task.Run(() => HandleClient(client));
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MessageBox.Show("Error: " + ex.Message);
+        //    }
+        //    finally
+        //    {
+        //        listener.Stop();
+        //    }
+        //}
+
+        //private void TCPImageSend(byte[] image)
+        //{
+        //    int bytesInPackets = 1024;
+        //    int size = image.Length;
+
+        //    try
+        //    {
+        //        using (TcpClient tcpClient = new TcpClient("127.0.0.1", 30000))
+        //        using (NetworkStream stream = tcpClient.GetStream())
+        //        {
+        //            while (size > 0)
+        //            {
+        //                int bytesToSend = Math.Min(bytesInPackets, size);
+        //                stream.Write(image, image.Length - size, bytesToSend);
+        //                size -= bytesToSend;
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MessageBox.Show("Error: " + ex.ToString());
+        //    }
+        //}
+
+        //private void TCPImageReceive()
+        //{
+        //    TcpListener listener = StartTCPListener();
+
+        //    try
+        //    {
+        //        TcpClient client = listener.AcceptTcpClient();
+        //        using (NetworkStream stream = client.GetStream())
+        //        {
+        //            byte[] buffer = new byte[1024];
+        //            int totalBytesReceived = 0;
+        //            using (MemoryStream imageStream = new MemoryStream())
+        //            {
+        //                int bytesRead;
+        //                while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
+        //                {
+        //                    imageStream.Write(buffer, 0, bytesRead);
+        //                    totalBytesReceived += bytesRead;
+        //                }
+        //                ImageDeserializer(imageStream.ToArray());
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MessageBox.Show("Error: " + ex.ToString());
+        //    }
+        //    finally
+        //    {
+        //        listener.Stop();
+        //    }
+        //}
+
+
+
+        //private void ImageDeserializer(byte[] data)
+        //{
+        //    using (MemoryStream memstr = new MemoryStream(data))
+        //    {
+        //        System.Drawing.Image img = System.Drawing.Image.FromStream(memstr);
+        //        SaveImageToFile(img);
+        //    }
+        //}
 
         private void SaveImageToFile(System.Drawing.Image img)
         {
-            // Specify the file path where you want to save the image
-            string filePath = @"\\Mac\\Home\\Desktop\\ProjectIV_Group1\\Group1-Sec1-ProjectIV\\ClientInterface\\Resources\\image.jpeg";
+            // Get the directory where the executable file is located
+            string directory = System.Windows.Forms.Application.StartupPath;
+
+            // Construct the relative path to save the image file
+            string relativePath = Path.Combine(directory, "image.jpeg");
 
             // Save the image to the specified file path
-            img.Save(filePath, System.Drawing.Imaging.ImageFormat.Jpeg);
+            img.Save(relativePath, System.Drawing.Imaging.ImageFormat.Jpeg);
         }
 
     }
