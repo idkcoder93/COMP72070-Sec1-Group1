@@ -9,7 +9,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 
 namespace ClientInterface
 {
-    internal class ChatUser
+    public class ChatUser
     {
         private string username;
         private char[] data; 

@@ -29,7 +29,7 @@ namespace ClientInterface
 
         UdpClient udpClnt = new UdpClient();
         Socket soc = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-        IPEndPoint? endPnt;
+        //IPEndPoint? endPnt;
 
         public Form1()
         {
@@ -160,8 +160,6 @@ namespace ClientInterface
         }
 
         // Attachment functionality -- TODO: implement click functionality to the attach button
-
-
         private async Task ReceiveImagesFromServer()
         {
             try
@@ -176,7 +174,7 @@ namespace ClientInterface
                         NetworkStream nNetStream = client.GetStream();
                         System.Drawing.Image returnImage = System.Drawing.Image.FromStream(nNetStream);
                         SaveImageToFile(returnImage);
-                        ImageLabelLink();
+                        ReceivedImageLink();
 
                         // Add some delay to prevent busy waiting (optional)
                         await Task.Delay(1000); 
@@ -196,155 +194,23 @@ namespace ClientInterface
         }
 
         // Label linking to the image
-        public void ImageLabelLink()
+        public void ReceivedImageLink()
         {
-            // Create a new LinkLabel
-            LinkLabel ImageLink = new LinkLabel();
+            // Invokes change to chat panel
+            if (chatContainerPanel.InvokeRequired)
+            {
+                chatContainerPanel.Invoke(new MethodInvoker(() => ReceivedImageLink()));
+                return;
+            }
 
-            // Set the text of the LinkLabel
-            ImageLink.Text = $"image{imageNumber}.jpeg";
+            ImageLinkLabel imageLink = new ImageLinkLabel();
+            imageLink.setTextLink($"image{imageNumber}.jpeg");
             imageNumber++;
-
-            // Calculate the new Y position for the LinkLabel
             int newY = (chatContainerPanel.Controls.Count > 0) ? chatContainerPanel.Controls[chatContainerPanel.Controls.Count - 1].Bottom + 10 : 0;
+            imageLink.Location = new Point(0, newY);
+            chatContainerPanel.Controls.Add(imageLink);
 
-            // Add the LinkLabel to the chatContainerPanel
-            chatContainerPanel.Controls.Add(ImageLink);
-
-            // Subscribe to the LinkClicked event
-            ImageLink.LinkClicked += ImageLink_LinkClicked;
         }
-
-        private void ImageLink_LinkClicked(object? sender, LinkLabelLinkClickedEventArgs e)
-        {
-            e.Link.Visited = true;
-            System.Diagnostics.Process.Start("http://www.microsoft.com");
-        }
-
-        //private TcpListener StartTCPListener()
-        //{
-        //    TcpListener listener = new TcpListener(IPAddress.Any, 30000);
-        //    listener.Start();
-        //    return listener;
-        //}
-
-        //private void HandleClient(TcpClient client)
-        //{
-        //    try
-        //    {
-        //        using (NetworkStream stream = client.GetStream())
-        //        {
-        //            byte[] buffer = new byte[1024];
-        //            int bytesRead;
-        //            MemoryStream imageStream = new MemoryStream();
-
-        //            while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
-        //            {
-        //                imageStream.Write(buffer, 0, bytesRead);
-        //            }
-
-        //            // Process the received image data
-        //            ImageDeserializer(imageStream.ToArray());
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        MessageBox.Show("Error handling client: " + ex.Message);
-        //    }
-        //}
-
-        //private void StartListening()
-        //{
-        //    TcpListener listener = StartTCPListener();
-
-        //    try
-        //    {
-        //        while (true)
-        //        {
-        //            TcpClient client = listener.AcceptTcpClient();
-
-        //            // Handle the client connection asynchronously
-        //            Task.Run(() => HandleClient(client));
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        MessageBox.Show("Error: " + ex.Message);
-        //    }
-        //    finally
-        //    {
-        //        listener.Stop();
-        //    }
-        //}
-
-        //private void TCPImageSend(byte[] image)
-        //{
-        //    int bytesInPackets = 1024;
-        //    int size = image.Length;
-
-        //    try
-        //    {
-        //        using (TcpClient tcpClient = new TcpClient("127.0.0.1", 30000))
-        //        using (NetworkStream stream = tcpClient.GetStream())
-        //        {
-        //            while (size > 0)
-        //            {
-        //                int bytesToSend = Math.Min(bytesInPackets, size);
-        //                stream.Write(image, image.Length - size, bytesToSend);
-        //                size -= bytesToSend;
-        //            }
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        MessageBox.Show("Error: " + ex.ToString());
-        //    }
-        //}
-
-        //private void TCPImageReceive()
-        //{
-        //    TcpListener listener = StartTCPListener();
-
-        //    try
-        //    {
-        //        TcpClient client = listener.AcceptTcpClient();
-        //        using (NetworkStream stream = client.GetStream())
-        //        {
-        //            byte[] buffer = new byte[1024];
-        //            int totalBytesReceived = 0;
-        //            using (MemoryStream imageStream = new MemoryStream())
-        //            {
-        //                int bytesRead;
-        //                while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
-        //                {
-        //                    imageStream.Write(buffer, 0, bytesRead);
-        //                    totalBytesReceived += bytesRead;
-        //                }
-        //                ImageDeserializer(imageStream.ToArray());
-        //            }
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        MessageBox.Show("Error: " + ex.ToString());
-        //    }
-        //    finally
-        //    {
-        //        listener.Stop();
-        //    }
-        //}
-
-
-
-        //private void ImageDeserializer(byte[] data)
-        //{
-        //    using (MemoryStream memstr = new MemoryStream(data))
-        //    {
-        //        System.Drawing.Image img = System.Drawing.Image.FromStream(memstr);
-        //        SaveImageToFile(img);
-        //    }
-        //}
-
         private void SaveImageToFile(System.Drawing.Image img)
         {
             // Get the directory where the executable file is located
