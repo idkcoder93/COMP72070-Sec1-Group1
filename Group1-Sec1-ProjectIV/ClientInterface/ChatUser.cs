@@ -27,7 +27,7 @@ namespace ClientInterface
             if (data != null)
             {
                 Array.Copy(newData, data, dataSize);
-                data[dataSize] = '\0';
+                //data[dataSize] = '\0';
             }
             else
             {
@@ -47,6 +47,11 @@ namespace ClientInterface
 
             // Copy the src data into the data array starting after the username
             Array.Copy(src, 0, data, usernameLength, dataSize);
+        }
+
+        public string GetDataAsString()
+        {
+            return new string(data); // Converts the character array to string
         }
     }
 }

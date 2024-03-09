@@ -8,19 +8,19 @@
     "net8.0-windows7.0": []
   },
   "packageFolders": {
-    "C:\\Users\\alexfridman\\.nuget\\packages\\": {}
+    "C:\\Users\\codud\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "\\\\Mac\\Home\\Desktop\\ProjectIV_Group1\\Group1-Sec1-ProjectIV\\ClientInterface\\ClientInterface.csproj",
+      "projectUniqueName": "C:\\Users\\codud\\source\\repos\\COMP72070-Sec1-Group1\\Group1-Sec1-ProjectIV\\ClientInterface\\ClientInterface.csproj",
       "projectName": "ClientInterface",
-      "projectPath": "\\\\Mac\\Home\\Desktop\\ProjectIV_Group1\\Group1-Sec1-ProjectIV\\ClientInterface\\ClientInterface.csproj",
-      "packagesPath": "C:\\Users\\alexfridman\\.nuget\\packages\\",
-      "outputPath": "\\\\Mac\\Home\\Desktop\\ProjectIV_Group1\\Group1-Sec1-ProjectIV\\ClientInterface\\obj\\",
+      "projectPath": "C:\\Users\\codud\\source\\repos\\COMP72070-Sec1-Group1\\Group1-Sec1-ProjectIV\\ClientInterface\\ClientInterface.csproj",
+      "packagesPath": "C:\\Users\\codud\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\codud\\source\\repos\\COMP72070-Sec1-Group1\\Group1-Sec1-ProjectIV\\ClientInterface\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\alexfridman\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\codud\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
