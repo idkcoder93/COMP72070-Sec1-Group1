@@ -77,12 +77,7 @@ namespace ServerGUI
                     latestMessage.Content = dataReceived; 
                 });
 
-
-
-                // Handle the received data here, you can update UI elements or perform any other operations.
-                // For example: receivedMessagesListBox.Items.Add(dataReceived);
-
-                // Echo the message back to the client (optional)
+                // Echo message back to the client 
                 byte[] response = Encoding.ASCII.GetBytes($"Server received: {dataReceived}");
                 server.Send(response, response.Length, clientEndPoint);
             }
@@ -95,10 +90,9 @@ namespace ServerGUI
         private void StopServer()
         {
             server.Close();
-            // You can update UI elements to indicate that the server has stopped.
         }
 
-        // Remember to handle closing of the main window to ensure the server is properly stopped.
+        // handle closing of the main window to ensure the server is properly stopped.
         protected override void OnClosed(EventArgs e)
         {
             base.OnClosed(e);
