@@ -62,6 +62,7 @@
             // 
             pictureBox1.BackColor = Color.Navy;
             pictureBox1.Dock = DockStyle.Fill;
+            pictureBox1.Image = ClientSync.Properties.Resources.chat_icon;
             pictureBox1.Location = new Point(2, 3);
             pictureBox1.Margin = new Padding(6, 8, 6, 8);
             pictureBox1.Name = "pictureBox1";
@@ -83,7 +84,6 @@
             label1.Padding = new Padding(10, 8, 6, 8);
             label1.Size = new Size(1792, 163);
             label1.TabIndex = 1;
-            label1.Text = "";
             label1.Click += label1_Click;
             // 
             // MeChatBubble
@@ -107,7 +107,7 @@
 
         #endregion
 
-    private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.Panel panel1;
     private System.Windows.Forms.PictureBox pictureBox1;
     protected System.Windows.Forms.Label label1;
     private System.Windows.Forms.Panel panel2;
