@@ -29,15 +29,43 @@ namespace ClientInterface
 
         UdpClient udpClnt = new UdpClient();
         Socket soc = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-        //IPEndPoint? endPnt;
+        private TcpClient? connectedClient;
 
         public Form1()
         {
             InitializeComponent();
             textBox1.KeyPress += textBox1_KeyPress;
 
+            InitializeConnection();
+
             StartReceivingMessages();
             StartReceivingImages();
+        }
+
+        private async void InitializeConnection()
+        {
+            try
+            {
+                if (connectedClient == null)
+                {
+                    connectedClient = new TcpClient(); // Instantiate a new TcpClient if not already initialized
+                }
+
+                IPAddress ipAddress = IPAddress.Parse(chatSendStr);
+                var ipEndPoint = new IPEndPoint(ipAddress, TcpPort);
+
+                if (!connectedClient.Connected) // Check if the client is already connected
+                {
+                    await connectedClient.ConnectAsync(ipEndPoint); // Connect to the server asynchronously
+                }
+
+                // Connection successful, perform additional initialization or operations
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error connecting: " + ex.Message);
+                // Handle the error appropriately
+            }
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -46,6 +74,10 @@ namespace ClientInterface
             if (udpClnt != null)
             {
                 udpClnt.Close();
+            }
+            if (connectedClient != null)
+            {
+                connectedClient.Close();
             }
         }
 
@@ -163,8 +195,48 @@ namespace ClientInterface
         // Attachment functionality -- TODO: implement click functionality to the attach button
         private async Task ReceiveImagesFromServer()
         {
-            try
+            while (true)
             {
+<<<<<<< HEAD
+                try
+                {
+                    if (connectedClient == null)
+                    {
+                        MessageBox.Show("Error: TCP client is not initialized or connected.");
+                        return;
+                    }
+                    // Read the byte array length prefix
+                    byte[] lengthPrefix = new byte[4]; // Assuming int32 length prefix
+                    await connectedClient.GetStream().ReadAsync(lengthPrefix, 0, 4);
+                    int imageDataLength = BitConverter.ToInt32(lengthPrefix, 0);
+
+                    // Read the byte array containing the image data
+                    byte[] imageData = new byte[imageDataLength];
+                    int totalBytesRead = 0;
+                    while (totalBytesRead < imageDataLength)
+                    {
+                        int bytesRead = await connectedClient.GetStream().ReadAsync(imageData, totalBytesRead, imageDataLength - totalBytesRead);
+                        if (bytesRead == 0)
+                        {
+                            throw new IOException("End of stream reached before image data could be fully received.");
+                        }
+                        totalBytesRead += bytesRead;
+                    }
+
+                    // Deserialize the byte array back into an image
+                    using (MemoryStream ms = new MemoryStream(imageData))
+                    {
+                        System.Drawing.Image receivedImage = System.Drawing.Image.FromStream(ms);
+                        // Use the received image as needed
+                        SaveImageToFile(receivedImage);
+                        ReceivedImageLink();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error receiving image: " + ex.Message);
+                }
+=======
                 IPAddress ipAddress = IPAddress.Parse(chatSendStr);
                 var ipEndPoint = new IPEndPoint(ipAddress, TcpPort);
                 using TcpClient client = new();
@@ -184,6 +256,7 @@ namespace ClientInterface
             catch (IOException ex)
             {
                 MessageBox.Show("Error: " + ex.Message);
+>>>>>>> 3c72936123c5768e990d04976dd2b7cf4aaa9941
             }
         }
 
