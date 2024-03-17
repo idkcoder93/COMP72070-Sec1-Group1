@@ -17,18 +17,17 @@ using System.Net.Http;
 
 namespace ClientInterface
 {
-
     public partial class Form1 : Form
     {
-        int chatPort = 27500;
-        int recPort = 27000;
+
+        int chatPort = 27000;
+        int recPort = 27500;
         string chatSendStr = "127.0.0.1";
         int TcpPort = 30000;
 
-        int imageNumber = 1;
-
         UdpClient udpClnt = new UdpClient();
         Socket soc = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        private TcpListener listener;
         private TcpClient? connectedClient;
 
         public Form1()
@@ -36,35 +35,27 @@ namespace ClientInterface
             InitializeComponent();
             textBox1.KeyPress += textBox1_KeyPress;
 
-            InitializeConnection();
-
             StartReceivingMessages();
-            StartReceivingImages();
+
+            // Initialize TcpListener
+            IPAddress ipAddress = IPAddress.Parse(chatSendStr);
+            var ipEndPoint = new IPEndPoint(ipAddress, TcpPort);
+            listener = new TcpListener(ipEndPoint);
+            listener.Start();
+            // Start accepting TCP clients asynchronously
+            _ = AcceptTcpClient();
         }
 
-        private async void InitializeConnection()
+        private async Task AcceptTcpClient()
         {
             try
             {
-                if (connectedClient == null)
-                {
-                    connectedClient = new TcpClient(); // Instantiate a new TcpClient if not already initialized
-                }
-
-                IPAddress ipAddress = IPAddress.Parse(chatSendStr);
-                var ipEndPoint = new IPEndPoint(ipAddress, TcpPort);
-
-                if (!connectedClient.Connected) // Check if the client is already connected
-                {
-                    await connectedClient.ConnectAsync(ipEndPoint); // Connect to the server asynchronously
-                }
-
-                // Connection successful, perform additional initialization or operations
+                TcpClient client = await listener.AcceptTcpClientAsync();
+                connectedClient = client;
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error connecting: " + ex.Message);
-                // Handle the error appropriately
+                MessageBox.Show("Error accepting TCP client: " + ex.Message);
             }
         }
 
@@ -74,10 +65,6 @@ namespace ClientInterface
             if (udpClnt != null)
             {
                 udpClnt.Close();
-            }
-            if (connectedClient != null)
-            {
-                connectedClient.Close();
             }
         }
 
@@ -98,7 +85,7 @@ namespace ClientInterface
             }
         }
 
-        public void SendMessage()
+        private void SendMessage()
         {
             string newText = textBox1.Text;
 
@@ -106,7 +93,7 @@ namespace ClientInterface
             if (String.IsNullOrEmpty(newText))
             {
                 MessageBox.Show("Cannot send empty messages.", "Cannot Send");
-                return; // Return immediately after displaying the error message
+                return;
             }
 
             try
@@ -115,7 +102,6 @@ namespace ClientInterface
                 IPEndPoint ipEndPoint = new IPEndPoint(IPAddress.Parse(chatSendStr), chatPort);
                 byte[] data = Encoding.ASCII.GetBytes(newText);
                 udpClient.Send(data, data.Length, ipEndPoint);
-                lastSentMessage = newText; 
                 DisplaySentMessage(newText);
             }
             catch (Exception ex)
@@ -192,77 +178,64 @@ namespace ClientInterface
             chatContainerPanel.Controls.Add(youChatBubble);
         }
 
-        // Attachment functionality -- TODO: implement click functionality to the attach button
-        private async Task ReceiveImagesFromServer()
+        // Attachment functionality
+        private async void OnClickAttachButton(object sender, EventArgs e)
         {
-            while (true)
+            OpenFileDialog openFileDialog1 = new OpenFileDialog();
+            openFileDialog1.Filter = "JPEG files (*.jpg;*.jpeg)|*.jpg;*.jpeg|All files (*.*)|*.*"; // Limit to JPEG files
+            DialogResult result = openFileDialog1.ShowDialog(); // Show the dialog.
+
+            if (result == DialogResult.OK)
             {
+                string file = openFileDialog1.FileName;
+
                 try
                 {
-                    if (connectedClient == null)
+                    // Check if the selected file is a JPEG image
+                    if (Path.GetExtension(file).Equals(".jpg", StringComparison.OrdinalIgnoreCase) ||
+                        Path.GetExtension(file).Equals(".jpeg", StringComparison.OrdinalIgnoreCase))
                     {
-                        MessageBox.Show("Error: TCP client is not initialized or connected.");
-                        return;
-                    }
-                    // Read the byte array length prefix
-                    byte[] lengthPrefix = new byte[4]; // Assuming int32 length prefix
-                    await connectedClient.GetStream().ReadAsync(lengthPrefix, 0, 4);
-                    int imageDataLength = BitConverter.ToInt32(lengthPrefix, 0);
+                        // Server side code
+                        Bitmap tImage = new Bitmap(file);
+                        byte[] imageBytes;
 
-                    // Read the byte array containing the image data
-                    byte[] imageData = new byte[imageDataLength];
-                    int totalBytesRead = 0;
-                    while (totalBytesRead < imageDataLength)
-                    {
-                        int bytesRead = await connectedClient.GetStream().ReadAsync(imageData, totalBytesRead, imageDataLength - totalBytesRead);
-                        if (bytesRead == 0)
+                        using (MemoryStream ms = new MemoryStream())
                         {
-                            throw new IOException("End of stream reached before image data could be fully received.");
+                            tImage.Save(ms, tImage.RawFormat); // Save the Bitmap to the MemoryStream
+                            imageBytes = ms.ToArray(); // Convert MemoryStream to byte array
                         }
-                        totalBytesRead += bytesRead;
-                    }
 
-                    // Deserialize the byte array back into an image
-                    using (MemoryStream ms = new MemoryStream(imageData))
+                        // If a client is not already connected, accept a new one
+                        if (connectedClient == null)
+                        {
+                            return;
+                        }
+                        if (connectedClient != null)
+                        {
+                            byte[] lengthPrefix = BitConverter.GetBytes(imageBytes.Length);
+                            await connectedClient.GetStream().WriteAsync(lengthPrefix, 0, lengthPrefix.Length);
+
+                            // Send the byte array containing the image data
+                            await connectedClient.GetStream().WriteAsync(imageBytes, 0, imageBytes.Length);
+                        }
+                        else
+                        {
+                            MessageBox.Show("Error: Unable to establish connection with the client.");
+                        }
+                    }
+                    else
                     {
-                        System.Drawing.Image receivedImage = System.Drawing.Image.FromStream(ms);
-                        // Use the received image as needed
-                        SaveImageToFile(receivedImage);
-                        ReceivedImageLink();
+                        MessageBox.Show("Please select a JPEG image file.");
                     }
                 }
-                catch (Exception ex)
+                catch (IOException ex)
                 {
-                    MessageBox.Show("Error receiving image: " + ex.Message);
+                    MessageBox.Show("Error: " + ex.Message);
                 }
             }
         }
 
 
-        // Call the asynchronous method to start receiving images from the server
-        private void StartReceivingImages()
-        {
-            Task.Run(() => ReceiveImagesFromServer());
-        }
-
-        // Label linking to the image
-        public void ReceivedImageLink()
-        {
-            // Invokes change to chat panel
-            if (chatContainerPanel.InvokeRequired)
-            {
-                chatContainerPanel.Invoke(new MethodInvoker(() => ReceivedImageLink()));
-                return;
-            }
-
-            ImageLinkLabel imageLink = new ImageLinkLabel();
-            imageLink.setTextLink($"image{imageNumber}.jpeg");
-            imageNumber++;
-            int newY = (chatContainerPanel.Controls.Count > 0) ? chatContainerPanel.Controls[chatContainerPanel.Controls.Count - 1].Bottom + 10 : 0;
-            imageLink.Location = new Point(0, newY);
-            chatContainerPanel.Controls.Add(imageLink);
-
-        }
         private void SaveImageToFile(System.Drawing.Image img)
         {
             // Get the directory where the executable file is located
@@ -275,41 +248,58 @@ namespace ClientInterface
             img.Save(relativePath, System.Drawing.Imaging.ImageFormat.Jpeg);
         }
 
-        // --- For testing --- //
-
-        private IUdpClientWrapper _udpClientWrapper;
-        private IMessageBoxWrapper _messageBoxWrapper;
-
-        private string lastSentMessage; // Field to store the last sent message
-        public string GetLastSentMessage()
-        {
-            return lastSentMessage;
-        }
-
-        public void SetMessageBoxWrapper(IMessageBoxWrapper messageBoxWrapper)
-        {
-            _messageBoxWrapper = messageBoxWrapper;
-        }
-
-        public void SetTextBoxText(string text)
-        {
-            textBox1.Text = text;
-        }
-
-        public void SetUdpClientWrapper(IUdpClientWrapper udpClientWrapper)
-        {
-            _udpClientWrapper = udpClientWrapper;
-        }
-    }
-
-    public interface IMessageBoxWrapper
-    {
-        void Show(string message, string caption);
-    }
-
-    public interface IUdpClientWrapper
-    {
-        void DisplaySentMessage(string testMessage);
-        void Send(byte[] data, int length, string ip, int port);
     }
 }
+
+/* This is just in case -- backup
+
+OpenFileDialog openFileDialog1 = new OpenFileDialog();
+openFileDialog1.Filter = "JPEG files (*.jpg;*.jpeg)|*.jpg;*.jpeg|All files (*.*)|*.*"; // Limit to JPEG files
+DialogResult result = openFileDialog1.ShowDialog(); // Show the dialog.
+
+if (result == DialogResult.OK)
+{
+    string file = openFileDialog1.FileName;
+
+    try
+    {
+        // Check if the selected file is a JPEG image
+        if (Path.GetExtension(file).Equals(".jpg", StringComparison.OrdinalIgnoreCase) ||
+            Path.GetExtension(file).Equals(".jpeg", StringComparison.OrdinalIgnoreCase))
+        {
+            // Server side code
+            Bitmap tImage = new Bitmap(file);
+            byte[] imageBytes;
+
+            using (MemoryStream ms = new MemoryStream())
+            {
+                tImage.Save(ms, tImage.RawFormat); // Save the Bitmap to the MemoryStream
+                imageBytes = ms.ToArray(); // Convert MemoryStream to byte array
+            }
+
+            // If a client is not already connected, accept a new one
+            if (connectedClient == null)
+            {
+                //connectedClient = await AcceptTcpClient();
+            }
+            if (connectedClient != null)
+            {
+                // Send the image data to the client
+                await connectedClient.GetStream().WriteAsync(imageBytes, 0, imageBytes.Length);
+                connectedClient.GetStream().Close();
+            }
+            else
+            {
+                MessageBox.Show("Error: Unable to establish connection with the client.");
+            }
+        }
+        else
+        {
+            MessageBox.Show("Please select a JPEG image file.");
+        }
+    }
+    catch (IOException ex)
+    {
+        MessageBox.Show("Error: " + ex.Message);
+    }
+} */
