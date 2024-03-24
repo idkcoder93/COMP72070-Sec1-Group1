@@ -10,6 +10,7 @@ namespace ServerGUI
 {
     public partial class MainWindow : Window
     {
+        // set up the send and receive ports 
         private UdpClient server27000;
         private UdpClient server28000;
         private Thread listenThread27000;
@@ -27,6 +28,7 @@ namespace ServerGUI
             StartServers();
         }
 
+        // function to start the servers and start listening 
         private void StartServers()
         {
             try
@@ -40,7 +42,7 @@ namespace ServerGUI
                 listenThread27000.Start();
                 listenThread28000.Start();
 
-                // Update UI element indicating that the servers have started
+                // update UI element indicating that the servers have started
                 Dispatcher.Invoke(() =>
                 {
                     serverStatusLabel.Content = "Servers started";
@@ -52,6 +54,7 @@ namespace ServerGUI
             }
         }
 
+        // listen for connection from client1
         private void ListenForClients27000()
         {
             try
@@ -71,6 +74,7 @@ namespace ServerGUI
             }
         }
 
+        // listen for connection from client2
         private void ListenForClients28000()
         {
             try
@@ -90,6 +94,9 @@ namespace ServerGUI
             }
         }
 
+        // receive images and messages 
+        // saves data to file 
+        // updates server GUI elements 
         private void HandleClient27000(byte[] data, IPEndPoint clientEndPoint)
         {
             try
@@ -107,17 +114,20 @@ namespace ServerGUI
                 }
                 else
                 {
+                    // Append the received data to a text file
+                    SaveDataToFile(dataReceived, "ReceivedData27000.txt"); // save the data to file 
+
                     Dispatcher.Invoke(() =>
                     {
                         serverStatusLabel.Content = "Client Connected (Port 27000)";
                         numUsersLabel.Content = "True";
 
-                        latestMessageReceivedTime.Content = DateTime.Now.ToString();
+                        latestMessageReceivedTime.Content = DateTime.Now.ToString(); // update received message time
 
                         messagesReceived27000++;
                         numReceivedMessages.Content = messagesReceived27000 + messagesReceived28000;
 
-                        latestMessage.Content = dataReceived;
+                        latestMessage.Content = dataReceived; // display latest message 
 
                         if (dataReceived == "[Disconnect]")
                         {
@@ -126,7 +136,7 @@ namespace ServerGUI
                     });
 
                     // Forward the received data to port 28500
-                    server28000.Send(data, data.Length, new IPEndPoint(clientEndPoint.Address, port28500));
+                    server28000.Send(data, data.Length, new IPEndPoint(clientEndPoint.Address, port28500)); // send this info to client 2 
                 }
             }
             catch (Exception ex)
@@ -143,7 +153,7 @@ namespace ServerGUI
 
                 if (dataReceived.StartsWith("[Image]"))
                 {
-                    byte[] imageData = Convert.FromBase64String(dataReceived.Substring(7)); // Remove [Image] prefix
+                    byte[] imageData = Convert.FromBase64String(dataReceived.Substring(7)); // remove [Image] prefix
                     File.WriteAllBytes("ReceivedImage28000.jpg", imageData);
                     Dispatcher.Invoke(() =>
                     {
@@ -152,6 +162,9 @@ namespace ServerGUI
                 }
                 else
                 {
+                    // append the received data to a text file
+                    SaveDataToFile(dataReceived, "ReceivedData28000.txt");
+
                     Dispatcher.Invoke(() =>
                     {
                         serverStatusLabel.Content = "Client Connected (Port 28000)";
@@ -170,7 +183,7 @@ namespace ServerGUI
                         }
                     });
 
-                    // Forward the received data to port 27500
+                    // forward the received data to port 27500
                     server27000.Send(data, data.Length, new IPEndPoint(clientEndPoint.Address, port27500));
                 }
             }
@@ -180,12 +193,31 @@ namespace ServerGUI
             }
         }
 
+        // function to save the data to file 
+        private void SaveDataToFile(string data, string fileName)
+        {
+            try
+            {
+                using (StreamWriter writer = new StreamWriter(fileName, true))
+                {
+                    writer.WriteLine(data);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error saving data to file: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+
+        // properly close the servers 
         private void StopServers()
         {
             server27000.Close();
             server28000.Close();
         }
 
+        // close the GUI and servers on close 
         protected override void OnClosed(EventArgs e)
         {
             base.OnClosed(e);

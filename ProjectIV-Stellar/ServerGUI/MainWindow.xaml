@@ -89,7 +89,7 @@
 
             <Label x:Name="numReceivedMessages" Content="0" FontSize="20"
                      HorizontalAlignment="Left" VerticalAlignment="Top"
-                     Foreground="White" Grid.Column="1" Margin="485,198,0,0" Grid.Row="1"/>
+                     Foreground="White" Grid.Column="1" Margin="428,198,0,0" Grid.Row="1" RenderTransformOrigin="-2.018,0.475"/>
 
             <Label x:Name="latestMessage" Content="-" FontSize="20"
                      HorizontalAlignment="Left" VerticalAlignment="Top"
@@ -97,7 +97,7 @@
 
             <Label x:Name="latestMessageReceivedTime" Content="-" FontSize="20"
                      HorizontalAlignment="Left" VerticalAlignment="Top"
-                     Foreground="White" Grid.Column="1" Margin="336,360,0,0" Grid.Row="1"/>
+                     Foreground="White" Grid.Column="1" Margin="428,360,0,0" Grid.Row="1"/>
 
 
 
