@@ -2,7 +2,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using ClientInterface;
 using System.Text;
-using System.Net.Sockets; // Importing the namespace where ChatUser is defined
+using System.Net.Sockets;
+using System.Net; // Importing the namespace where ChatUser is defined
 
 
 namespace TestProject
@@ -65,56 +66,71 @@ namespace TestProject
             udpClientWrapperMock.Verify(x => x.Send(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<int>()), Times.Once(), "The message was not sent exactly once.");
         }
 
-        //[TestMethod]
-        //public void SetData_ValidData()
-        //{
-        //    // Arrange
-        //    ChatUser user = new ChatUser("testUser", 10);
-        //    var newData = new char[] { 'a', 'b', 'c' };
-        //    var expectedDataAsString = "abc"; // String representation of the expected data
+        [TestMethod]
+        public async Task CLIENT003_ReceiveImagesFromServer()
+        {
+            // Arrange
+            var tcpClientMock = new Mock<ITcpClientWrapper>();
+            var networkStreamMock = new Mock<INetworkStream>();
 
-        //    // Act
-        //    user.SetData(newData, 3); // Assuming SetData updates both the data and its size
+            tcpClientMock.Setup(x => x.Connected).Returns(true);
+            tcpClientMock.Setup(x => x.GetStream()).Returns(networkStreamMock.Object);
 
-        //    // Assert
-        //    var actualDataAsString = user.GetDataAsString(); // Assuming GetData returns the char array or similar method
-        //    Assert.AreEqual(expectedDataAsString, actualDataAsString);
-        //}
+            // Simulate receiving an image length of 4, followed by the image data
+            var sequence = new MockSequence();
+            networkStreamMock.InSequence(sequence)
+                .Setup(x => x.ReadAsync(It.IsAny<byte[]>(), 0, 4, It.IsAny<CancellationToken>()))
+                .ReturnsAsync((byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
+                {
+                    BitConverter.GetBytes(4).CopyTo(buffer, offset);
+                    return 4; // Number of bytes read (image length)
+                });
 
-        //[TestMethod]
-        //public void SendMessage_WithEmptyMessage_ShouldShowMessageBox()
-        //{
-        //    // Arrange
-        //    var form = new Form1();
-        //    var mockMessageBox = new Mock<IMessageBoxWrapper>();
-        //    form.SetMessageBoxWrapper(mockMessageBox.Object);
+            networkStreamMock.InSequence(sequence)
+                .Setup(x => x.ReadAsync(It.IsAny<byte[]>(), 0, It.IsAny<int>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
+                {
+                    new byte[] { 1, 2, 3, 4 }.CopyTo(buffer, offset);
+                    return 4; // Number of bytes read (image data)
+                });
 
-        //    // Act
-        //    form.SendMessage();
+            var form = new Form1(tcpClientMock.Object); // Assuming Form1 accepts ITcpClientWrapper in its constructor
 
-        //    // Assert
-        //    mockMessageBox.Verify(m => m.Show("Cannot send empty messages.", "Cannot Send"), Times.Once);
-        //}
+            // Act
+            var receiveTask = form.ReceiveImagesFromServer(); // You might need to adjust the control flow for testing
+            await Task.WhenAny(receiveTask, Task.Delay(1000)); // Timeout to prevent hanging in case of an error
 
-        //[TestMethod]
-        //public void SendMessage_WithNonEmptyMessage()
-        //{
-        //    // Arrange
-        //    var form = new Form1();
-        //    var mockUdpClient = new Mock<IUdpClientWrapper>();
-        //    form.SetUdpClientWrapper(mockUdpClient.Object);
+            // Assert
+            string expectedFilePath = @"C:\Users\codud\source\repos\COMP72070-Sec1-Group1\Group1-Sec1-ProjectIV\TestClient\TestImage\test.jpeg";
 
-        //    string testMessage = "test message";
+            // Ensure the file exists
+            Assert.IsTrue(File.Exists(expectedFilePath), "The expected image file does not exist.");
 
-        //    // Act
-        //    form.SetTextBoxText(testMessage);
-        //    form.SendMessage();
-        //    string lastSentMessage = form.GetLastSentMessage(); // Get the last sent message
+            // Additional checks could include verifying file size, format, etc.
+            // Example: Check the file is not empty
+            var fileInfo = new FileInfo(expectedFilePath);
+            Assert.IsTrue(fileInfo.Length > 0, "The image file is empty.");
+        }
 
+        [TestMethod]
+        public async Task CLIENT004_ReceiveMessagesThroughUDP()
+        {
+            // Arrange
+            var udpClientWrapperMock = new Mock<IUdpClientWrapper>();
+            string expectedMessage = "Test message";
+            byte[] messageBytes = Encoding.ASCII.GetBytes(expectedMessage);
+            Form1 formUnderTest = new Form1();
+            formUnderTest.SetUdpClientWrapper(udpClientWrapperMock.Object);
 
-        //    // Assert
-        //    Assert.AreEqual(lastSentMessage, testMessage);
-        //}
+            udpClientWrapperMock.Setup(x => x.ReceiveAsync())
+                .ReturnsAsync(// need to change /*new UdpReceiveResult(messageBytes, new IPEndPoint(IPAddress.Loopback, 0))*/); // Simulating message reception
 
+            // Act
+            await Task.Run(() => formUnderTest.StartReceivingMessages()); // Might need to adjust for actual async handling
+            string actualMessage = formUnderTest.GetLastReceivedMessage();
+
+            // Assert
+            Assert.AreEqual(expectedMessage, actualMessage, "The received message does not match the expected message.");
+        }
     }
 }
