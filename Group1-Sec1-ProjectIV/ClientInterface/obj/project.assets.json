@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "\\\\Mac\\Home\\Desktop\\ProjectIV_Group1\\Group1-Sec1-ProjectIV\\ClientInterface\\ClientInterface.csproj",
+      "projectUniqueName": "\\\\Mac\\Home\\Desktop\\CSCN72050-Sec1-Group1\\Group1-Sec1-ProjectIV\\ClientInterface\\ClientInterface.csproj",
       "projectName": "ClientInterface",
-      "projectPath": "\\\\Mac\\Home\\Desktop\\ProjectIV_Group1\\Group1-Sec1-ProjectIV\\ClientInterface\\ClientInterface.csproj",
+      "projectPath": "\\\\Mac\\Home\\Desktop\\CSCN72050-Sec1-Group1\\Group1-Sec1-ProjectIV\\ClientInterface\\ClientInterface.csproj",
       "packagesPath": "C:\\Users\\alexfridman\\.nuget\\packages\\",
-      "outputPath": "\\\\Mac\\Home\\Desktop\\ProjectIV_Group1\\Group1-Sec1-ProjectIV\\ClientInterface\\obj\\",
+      "outputPath": "\\\\Mac\\Home\\Desktop\\CSCN72050-Sec1-Group1\\Group1-Sec1-ProjectIV\\ClientInterface\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\alexfridman\\AppData\\Roaming\\NuGet\\NuGet.Config",
