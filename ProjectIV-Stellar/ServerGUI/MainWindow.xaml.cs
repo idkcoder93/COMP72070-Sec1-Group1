@@ -1,4 +1,9 @@
-﻿using System;
+// Group 1 
+// Ryan T
+// Server functionality code 
+// Acts as the middle man between two clients 
+
+using System;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -11,6 +16,8 @@ namespace ServerGUI
     public partial class MainWindow : Window
     {
         // set up the send and receive ports 
+        // client 1 = 27000 27500 
+        // client 2 = 28000 28500 
         private UdpClient server27000;
         private UdpClient server28000;
         private Thread listenThread27000;
@@ -64,6 +71,7 @@ namespace ServerGUI
                     IPEndPoint clientEndPoint = new IPEndPoint(IPAddress.Any, 0);
                     byte[] clientData = server27000.Receive(ref clientEndPoint);
 
+                    // handle the client 
                     Thread clientThread = new Thread(() => HandleClient27000(clientData, clientEndPoint));
                     clientThread.Start();
                 }
@@ -105,7 +113,7 @@ namespace ServerGUI
 
                 if (dataReceived.StartsWith("[Image]"))
                 {
-                    byte[] imageData = Convert.FromBase64String(dataReceived.Substring(7)); // Remove [Image] prefix
+                    byte[] imageData = Convert.FromBase64String(dataReceived.Substring(7)); // remove [Image] prefix
                     File.WriteAllBytes("ReceivedImage27000.jpg", imageData);
                     Dispatcher.Invoke(() =>
                     {
@@ -114,7 +122,7 @@ namespace ServerGUI
                 }
                 else
                 {
-                    // Append the received data to a text file
+                    // append the received data to a text file
                     SaveDataToFile(dataReceived, "ReceivedData27000.txt"); // save the data to file 
 
                     Dispatcher.Invoke(() =>
