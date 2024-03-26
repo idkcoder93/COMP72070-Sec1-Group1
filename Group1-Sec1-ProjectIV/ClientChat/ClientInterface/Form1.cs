@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using static System.Net.Mime.MediaTypeNames;
 using System.Security.Policy;
 using System.Net.Http;
+using ClientSync;
 
 
 namespace ClientInterface
@@ -24,6 +25,8 @@ namespace ClientInterface
         int recPort = 27500;
         string chatSendStr = "127.0.0.1";
         int TcpPort = 30000;
+
+        int imageNumber = 1;
 
         UdpClient udpClnt = new UdpClient();
         Socket soc = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
@@ -37,6 +40,7 @@ namespace ClientInterface
 
             StartReceivingMessages();
 
+
             // Initialize TcpListener
             IPAddress ipAddress = IPAddress.Parse(chatSendStr);
             var ipEndPoint = new IPEndPoint(ipAddress, TcpPort);
@@ -44,6 +48,8 @@ namespace ClientInterface
             listener.Start();
             // Start accepting TCP clients asynchronously
             _ = AcceptTcpClient();
+
+            //StartReceivingImages();
         }
 
         private async Task AcceptTcpClient()
@@ -52,10 +58,12 @@ namespace ClientInterface
             {
                 TcpClient client = await listener.AcceptTcpClientAsync();
                 connectedClient = client;
+
+                await ReceiveImagesFromClient();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MessageBox.Show("Error accepting TCP client: " + ex.Message);
+                MessageBox.Show("Client disconnected...");
             }
         }
 
@@ -235,6 +243,64 @@ namespace ClientInterface
             }
         }
 
+        private async Task ReceiveImagesFromClient()
+        {
+            while (true)
+            {
+                try
+                {
+                    // Read the byte array length prefix
+                    byte[] lengthPrefix = new byte[4]; // Assuming int32 length prefix
+                    await connectedClient.GetStream().ReadAsync(lengthPrefix, 0, 4);
+                    int imageDataLength = BitConverter.ToInt32(lengthPrefix, 0);
+
+                    // Read the byte array containing the image data
+                    byte[] imageData = new byte[imageDataLength];
+                    int totalBytesRead = 0;
+                    while (totalBytesRead < imageDataLength)
+                    {
+                        int bytesRead = await connectedClient.GetStream().ReadAsync(imageData, totalBytesRead, imageDataLength - totalBytesRead);
+                        if (bytesRead == 0)
+                        {
+                            throw new IOException("End of stream reached before image data could be fully received.");
+                        }
+                        totalBytesRead += bytesRead;
+                    }
+
+                    // Deserialize the byte array back into an image
+                    using (MemoryStream ms = new MemoryStream(imageData))
+                    {
+                        System.Drawing.Image receivedImage = System.Drawing.Image.FromStream(ms);
+                        // Use the received image as needed
+                        SaveImageToFile(receivedImage);
+                        ReceivedImageLink();
+                    }
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show("Error receiving image: Client has disconnected");
+                    return;
+                }
+            }
+        }
+
+        // Label linking to the image
+        public void ReceivedImageLink()
+        {
+            // Invokes change to chat panel
+            if (chatContainerPanel.InvokeRequired)
+            {
+                chatContainerPanel.Invoke(new MethodInvoker(() => ReceivedImageLink()));
+                return;
+            }
+
+            ImageLinkLabel imageLink = new ImageLinkLabel();
+            imageLink.setTextLink($"image{imageNumber}.jpeg");
+            imageNumber++;
+            int newY = (chatContainerPanel.Controls.Count > 0) ? chatContainerPanel.Controls[chatContainerPanel.Controls.Count - 1].Bottom + 10 : 0;
+            imageLink.Location = new Point(0, newY);
+            chatContainerPanel.Controls.Add(imageLink);
+        }
 
         private void SaveImageToFile(System.Drawing.Image img)
         {
@@ -250,56 +316,3 @@ namespace ClientInterface
 
     }
 }
-
-/* This is just in case -- backup
-
-OpenFileDialog openFileDialog1 = new OpenFileDialog();
-openFileDialog1.Filter = "JPEG files (*.jpg;*.jpeg)|*.jpg;*.jpeg|All files (*.*)|*.*"; // Limit to JPEG files
-DialogResult result = openFileDialog1.ShowDialog(); // Show the dialog.
-
-if (result == DialogResult.OK)
-{
-    string file = openFileDialog1.FileName;
-
-    try
-    {
-        // Check if the selected file is a JPEG image
-        if (Path.GetExtension(file).Equals(".jpg", StringComparison.OrdinalIgnoreCase) ||
-            Path.GetExtension(file).Equals(".jpeg", StringComparison.OrdinalIgnoreCase))
-        {
-            // Server side code
-            Bitmap tImage = new Bitmap(file);
-            byte[] imageBytes;
-
-            using (MemoryStream ms = new MemoryStream())
-            {
-                tImage.Save(ms, tImage.RawFormat); // Save the Bitmap to the MemoryStream
-                imageBytes = ms.ToArray(); // Convert MemoryStream to byte array
-            }
-
-            // If a client is not already connected, accept a new one
-            if (connectedClient == null)
-            {
-                //connectedClient = await AcceptTcpClient();
-            }
-            if (connectedClient != null)
-            {
-                // Send the image data to the client
-                await connectedClient.GetStream().WriteAsync(imageBytes, 0, imageBytes.Length);
-                connectedClient.GetStream().Close();
-            }
-            else
-            {
-                MessageBox.Show("Error: Unable to establish connection with the client.");
-            }
-        }
-        else
-        {
-            MessageBox.Show("Please select a JPEG image file.");
-        }
-    }
-    catch (IOException ex)
-    {
-        MessageBox.Show("Error: " + ex.Message);
-    }
-} */

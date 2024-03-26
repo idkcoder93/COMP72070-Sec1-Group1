@@ -20,8 +20,8 @@ namespace ClientInterface
 
     public partial class Form1 : Form
     {
-        int chatPort = 27500;
-        int recPort = 27000;
+        int chatPort = 28000;
+        int recPort = 28500;
         string chatSendStr = "127.0.0.1";
         int TcpPort = 30000;
 
@@ -115,7 +115,7 @@ namespace ClientInterface
                 IPEndPoint ipEndPoint = new IPEndPoint(IPAddress.Parse(chatSendStr), chatPort);
                 byte[] data = Encoding.ASCII.GetBytes(newText);
                 udpClient.Send(data, data.Length, ipEndPoint);
-                lastSentMessage = newText; 
+                lastSentMessage = newText;
                 DisplaySentMessage(newText);
             }
             catch (Exception ex)
@@ -192,7 +192,63 @@ namespace ClientInterface
             chatContainerPanel.Controls.Add(youChatBubble);
         }
 
-        // Attachment functionality -- TODO: implement click functionality to the attach button
+        //attachment button to send images
+        private void OnClickAttachButton(object sender, EventArgs e)
+        {
+            OpenFileDialog openFileDialog1 = new OpenFileDialog();
+            openFileDialog1.Filter = "JPEG files (*.jpg;*.jpeg)|*.jpg;*.jpeg|All files (*.*)|*.*"; // Limit to JPEG files
+            DialogResult result = openFileDialog1.ShowDialog(); // Show the dialog.
+
+            if (result == DialogResult.OK)
+            {
+                string file = openFileDialog1.FileName;
+
+                try
+                {
+                    // Check if the selected file is a JPEG image
+                    if (Path.GetExtension(file).Equals(".jpg", StringComparison.OrdinalIgnoreCase) ||
+                        Path.GetExtension(file).Equals(".jpeg", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Server side code
+                        Bitmap tImage = new Bitmap(file);
+                        byte[] imageBytes;
+
+                        using (MemoryStream ms = new MemoryStream())
+                        {
+                            tImage.Save(ms, tImage.RawFormat); // Save the Bitmap to the MemoryStream
+                            imageBytes = ms.ToArray(); // Convert MemoryStream to byte array
+                        }
+
+                        // If a client is not already connected, accept a new one
+                        if (connectedClient == null)
+                        {
+                            return;
+                        }
+                        if (connectedClient != null)
+                        {
+                            byte[] lengthPrefix = BitConverter.GetBytes(imageBytes.Length);
+                            connectedClient.GetStream().WriteAsync(lengthPrefix, 0, lengthPrefix.Length);
+
+                            // Send the byte array containing the image data
+                            connectedClient.GetStream().WriteAsync(imageBytes, 0, imageBytes.Length);
+                        }
+                        else
+                        {
+                            MessageBox.Show("Error: Unable to establish connection with the client.");
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show("Please select a JPEG image file.");
+                    }
+                }
+                catch (IOException ex)
+                {
+                    MessageBox.Show("Error: " + ex.Message);
+                }
+            }
+
+        }
         private async Task ReceiveImagesFromServer()
         {
             while (true)
